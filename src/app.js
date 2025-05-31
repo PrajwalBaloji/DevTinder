@@ -2,8 +2,10 @@ const express = require("express");
 
 const app = express();
 
-app.get("/user", (req, res) => {
-  res.send({ name: "prajwal" });
+app.get("/user/:userId/:username/:password", (req, res) => {
+  console.log(req.params);
+
+  res.send(req.query);
 });
 
 app.post("/user", (req, res) => {

@@ -1,57 +1,63 @@
 const express = require("express");
-const { userAuth, adminAUth } = require("./middlewares/auth");
+const connectDB = require("./config/database");
+const User = require("./models/user");
 
 const app = express();
 
-app.use(
-  "/requestHandlers",
-  (req, res, next) => {
-    console.log("1st Request handlers");
-    res.send("1st Request handlers");
-    next();
-  },
-  (req, res) => {
-    console.log("2nd Request handlers");
-    res.send("2nd Request handlers");
-  },
-  (req, res) => {
-    console.log("3rd Request handlers");
-  },
-  (req, res) => {
-    console.log("4th Request handlers");
+app.use(express.json());
+
+app.post("/signup", async (req, res) => {
+  const user = new User(req.body);
+
+  try {
+    await user.save();
+    res.send("user created");
+  } catch (error) {
+    res.status(400).send("Error creating the user");
   }
-);
-
-// user routes with auth except login
-
-app.get("/user/login", (req, res) => {
-  res.send("User will be able to login without auth");
 });
 
-app.get("/user", userAuth, (req, res) => {
-  res.send("All user data");
+app.delete("/user", async (req, res) => {
+  const userId = req.body?.userId;
+  try {
+    await User.findByIdAndDelete(userId);
+    res.send("User deleted");
+  } catch (error) {
+    res.status(400).send("Error deleteing the user");
+  }
 });
 
-app.post("/user", userAuth, (req, res) => {
-  res.send("Post user succesfull");
+app.patch("/user", async (req, res) => {
+  const userId = req.body.userId;
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(userId, req.body, {
+      returnDocument: "after",
+    });
+    res.send(updatedUser);
+  } catch (error) {
+    console.log({ error });
+
+    res.status(400).send("Error updating the user");
+  }
 });
 
-app.use("/test", (req, res) => {
-  res.send("Test page");
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.send(users);
+  } catch (error) {
+    res.status(400).send("No users found");
+  }
 });
 
-// admin route with global login
-
-app.use("/admin", adminAUth);
-
-app.get("/admin", (req, res) => {
-  res.send("Hello admin");
-});
-
-app.use("/", (req, res) => {
-  res.send("Home page");
-});
-
-app.listen(7777, () => {
-  console.log("Server is up and running and is listening to port 3000");
-});
+connectDB()
+  .then(() => {
+    console.log("Database connectioin established");
+    app.listen(7777, () => {
+      console.log("Server is up and running and is listening to port 7777");
+    });
+  })
+  .catch((err) => {
+    console.log(err);
+  });

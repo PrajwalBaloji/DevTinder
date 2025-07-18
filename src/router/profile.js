@@ -8,7 +8,7 @@ const profileRouter = express.Router();
 profileRouter.get("/profile/view", auth, (req, res) => {
   try {
     const { user } = req;
-    res.send(user);
+    res.json({ data: user });
   } catch (error) {
     res.status(400).send(error.message);
   }

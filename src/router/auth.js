@@ -17,10 +17,16 @@ authRouter.post("/signup", async (req, res) => {
       password: passwordHash,
     });
 
-    await user.save();
-    res.send("user created");
+    const savedUser = await user.save();
+    const token = await savedUser.getToken();
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 8 * 3600000),
+    });
+    res
+      .status(200)
+      .json({ message: "User added successfully", data: savedUser });
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -30,21 +36,22 @@ authRouter.post("/login", async (req, res) => {
 
     const user = await User.findOne({ emailId });
     if (!user) {
-      throw new Error("Inavlid credentials");
-    }
-    const isvalidPassword = await user.validateUser(password);
-    if (!isvalidPassword) {
-      throw new Error("Inavlid credentials");
+      return res.status(400).json({ error: "Invalid credentials" });
     }
 
-    const token = await user.getToken(user._id);
+    const isValidPassword = await user.validateUser(password);
+    if (!isValidPassword) {
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
+
+    const token = await user.getToken();
 
     res.cookie("token", token, {
       maxAge: 24 * 60 * 60 * 1000,
     });
-    res.send("Login successful");
+    res.json({ message: "Login successful", data: user });
   } catch (error) {
-    res.status(400).send(error.message);
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -53,9 +60,9 @@ authRouter.post("/logout", async (req, res) => {
     res.cookie("token", null, {
       expires: new Date(Date.now()),
     });
-    res.send("User has been logged out");
+    res.json({ message: "User has been logged out" });
   } catch (error) {
-    res.status(400).send(error.message);
+    res.status(400).json({ error: error.message });
   }
 });
 

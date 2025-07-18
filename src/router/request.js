@@ -60,6 +60,7 @@ requestRouter.post(
       const user = req.user;
       const acceptedStatus = ["accepted", "rejected"];
       const { status, requestId } = req.params;
+      console.log({ status, requestId });
       const isValidStatus = acceptedStatus.includes(status);
       if (!isValidStatus) throw new Error("Not a valid status");
 

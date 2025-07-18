@@ -4,6 +4,7 @@ const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
 
 const userRouter = express.Router();
+const USER_SAFE_DATA = "firstName lastName photoURL about age gender skills";
 
 userRouter.get("/user/requests/recieved", auth, async (req, res) => {
   try {
@@ -11,7 +12,7 @@ userRouter.get("/user/requests/recieved", auth, async (req, res) => {
     const recievedRequest = await ConnectionRequest.find({
       toUserId: user.id,
       status: "interested",
-    }).populate("fromUserId", ["firstName", "lastName"]);
+    }).populate("fromUserId", USER_SAFE_DATA);
     res.json({
       message: "Data fetched successfully",
       data: recievedRequest,
@@ -35,13 +36,9 @@ userRouter.get("/user/connections", auth, async (req, res) => {
           status: "accepted",
         },
       ],
-    })
-      .populate("fromUserId", ["firstName", "lastName"])
-      .populate("toUserId", ["firstName", "lastName"]);
+    }).populate("fromUserId toUserId", USER_SAFE_DATA);
 
     const data = allConnections.map((row) => {
-      console.log({ from: row.fromUserId._id, current: user._id });
-
       if (row.fromUserId._id.equals(user._id)) {
         return row.toUserId;
       }
@@ -60,7 +57,7 @@ userRouter.get("/user/feed", auth, async (req, res) => {
   try {
     const user = req.user;
     const page = req.query.page || 1;
-    const limit = req.query.limit || 2;
+    const limit = req.query.limit || 10;
     const skip = (page - 1) * limit;
     const connectionRequests = await ConnectionRequest.find({
       $or: [{ fromUserId: user._id }, { toUserId: user._id }],
@@ -70,7 +67,6 @@ userRouter.get("/user/feed", auth, async (req, res) => {
     connectionRequests.forEach((req) => {
       hideUsersFromFeed.add(req.fromUserId.toString());
       hideUsersFromFeed.add(req.toUserId.toString());
-      console.log({ hideUsersFromFeed });
     });
 
     const users = await User.find({

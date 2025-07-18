@@ -47,7 +47,7 @@ const userSchema = new Schema(
         message: "{VALUE} not valid gender",
       },
     },
-    photoUrl: {
+    photoURL: {
       type: String,
       default: "https://avatar.iran.liara.run/public/boy?username=Ash",
     },
@@ -75,8 +75,6 @@ userSchema.methods.getToken = async function () {
 };
 
 userSchema.methods.validateUser = async function (password) {
-  console.log({ password });
-
   const user = this;
   const isValidPassword = bcrypt.compare(password, user.password);
   return isValidPassword;

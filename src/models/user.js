@@ -49,7 +49,6 @@ const userSchema = new Schema(
     },
     photoURL: {
       type: String,
-      default: "https://avatar.iran.liara.run/public/boy?username=Ash",
     },
     about: {
       type: String,
